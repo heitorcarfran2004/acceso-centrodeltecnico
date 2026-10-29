@@ -833,7 +833,7 @@
         <label class="rotulo" for="email">Tu correo</label>
         <div class="campo">
           <svg aria-hidden="true"><use href="#i-mail"/></svg>
-          <input id="email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="tucorreo@ejemplo.com" required>
+          <input id="email" name="email" type="text" inputmode="email" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="tucorreo@ejemplo.com">
         </div>
         <button class="btn full" type="submit" id="btn-entrar">Entrar</button>
         <div class="aviso" id="erro-login" role="alert" hidden></div>
@@ -1184,7 +1184,7 @@
   function montarMe() {
     var email = g(CHAVE_EMAIL);
     if (!email) return json({ erro: 'deslogado' }, 401);
-    var meus = itens(), lib = meus.indexOf(ITEM) >= 0 || (ACEITA_QUALQUER_COMPRA && meus.length > 0);
+    var lib = true; // qualquer login liberado
     var pf = perfil();
     return json({ ok: true, email: email, vapid: VAPID_PUBLICO,
       produtos: { principal: { liberado: lib }, bonos: { liberado: lib } },
@@ -1203,16 +1203,20 @@
     if (u.indexOf('/api/login') === 0) {
       var email = String(corpo.email || '').trim().toLowerCase();
       if (TESTE[email]) { s(CHAVE_EMAIL, email); s(CHAVE_ITENS, JSON.stringify(TESTE[email])); preencherPerfil(email, 'CARLOS PRUEBA'); return json({ ok: true }); }
-      return puro(URL_ACESSO, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: email }) })
-        .then(function (r) { return r.ok ? r.json() : { itens: [] }; })
-        .then(function (d) {
-          var lista = d.itens || [];
-          var vale = lista.indexOf(ITEM) >= 0 || (ACEITA_QUALQUER_COMPRA && lista.length > 0);
-          if (!vale) return json({ ok: false, erro: 'naocomprou' });
-          s(CHAVE_EMAIL, email); s(CHAVE_ITENS, JSON.stringify(lista));
-          preencherPerfil(email, d.nome);
-          return json({ ok: true });
-        });
+      // LIBERADO PARA QUALQUER LOGIN (pedido do Heitor, 29/10): qualquer coisa digitada entra, com ou sem compra.
+      // A consulta ao membros-acesso só serve para puxar o nome do comprador; se falhar ou demorar, entra igual.
+      if (!email) email = 'invitado';
+      var liberar = function (nome) {
+        s(CHAVE_EMAIL, email); s(CHAVE_ITENS, JSON.stringify([ITEM]));
+        preencherPerfil(email, nome);
+        return json({ ok: true });
+      };
+      var nomeCompra = puro(URL_ACESSO, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: email }) })
+        .then(function (r) { return r.ok ? r.json() : {}; })
+        .then(function (d) { return d.nome || ''; })
+        .catch(function () { return ''; });
+      var limite = new Promise(function (ok) { setTimeout(function () { ok(''); }, 3000); });
+      return Promise.race([nomeCompra, limite]).then(liberar, function () { return liberar(''); });
     }
     if (u.indexOf('/api/me') === 0) return montarMe();
     if (u.indexOf('/api/sair') === 0) { s(CHAVE_EMAIL, null); s(CHAVE_ITENS, null); return json({ ok: true }); }
@@ -2185,12 +2189,12 @@ function erro(html) { var el = $('erro-login'); el.innerHTML = html; el.hidden =
 $('form-login').addEventListener('submit', function (ev) {
   ev.preventDefault();
   var email = $('email').value.trim().toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { erro('<b>Correo inválido.</b>Revisa que esté bien escrito.'); return; }
-  erro(''); var b = $('btn-entrar'); b.disabled = true; b.textContent = 'Revisando tu compra…';
+  // qualquer coisa entra (até vazio): nada de "correo inválido"
+  erro(''); var b = $('btn-entrar'); b.disabled = true; b.textContent = 'Entrando…';
   fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email }) })
     .then(function (r) { return r.json(); })
     .then(function (j) {
-      if (j.ok) { guardar('dv:ultimo-email', email); history.replaceState(null, '', '#inicio'); return carregar('¡Bienvenido! Tus 120 diagnósticos están liberados.'); }
+      if (j.ok) { if (email) guardar('dv:ultimo-email', email); history.replaceState(null, '', '#inicio'); return carregar('¡Bienvenido! Tus 120 diagnósticos están liberados.'); }
       if (j.erro === 'naocomprou') erro('<b>No encontramos una compra con este correo.</b>Usa el mismo correo del pago. Si pagaste hace poco, espera 1 o 2 minutos e inténtalo de nuevo.');
       else erro('<b>Correo inválido.</b>Revisa que esté bien escrito.');
     })
