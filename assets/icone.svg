@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Ícone do app: um chip com o pulso de diagnóstico, no preto e azul neon das fichas.
+       Fundo cheio até a borda (serve também como "maskable"); o desenho fica no centro seguro. -->
+  <defs>
+    <radialGradient id="f" cx="50%" cy="38%" r="75%">
+      <stop offset="0" stop-color="#123447"/>
+      <stop offset=".6" stop-color="#0A1A24"/>
+      <stop offset="1" stop-color="#05090D"/>
+    </radialGradient>
+    <filter id="brilho" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="9" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" fill="url(#f)"/>
+  <g fill="none" stroke="#22B8F0" stroke-linecap="round" stroke-linejoin="round" filter="url(#brilho)">
+    <!-- corpo do chip -->
+    <rect x="146" y="146" width="220" height="220" rx="30" stroke-width="16"/>
+    <!-- pinos -->
+    <g stroke-width="14">
+      <path d="M206 146v-38M256 146v-38M306 146v-38"/>
+      <path d="M206 366v38M256 366v38M306 366v38"/>
+      <path d="M146 206h-38M146 256h-38M146 306h-38"/>
+      <path d="M366 206h38M366 256h38M366 306h38"/>
+    </g>
+    <!-- pulso do diagnóstico -->
+    <path d="M168 262h38l18-44 30 92 26-70 14 22h50" stroke="#E9FAFF" stroke-width="15"/>
+  </g>
+</svg>

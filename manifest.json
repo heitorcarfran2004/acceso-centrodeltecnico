@@ -1,0 +1,17 @@
+{
+  "name": "Diagnósticos Visuales",
+  "short_name": "Diagnósticos",
+  "description": "Tus 120 diagnósticos visuales para hardware y software",
+  "lang": "es",
+  "display": "standalone",
+  "orientation": "any",
+  "start_url": "/#inicio",
+  "scope": "/",
+  "background_color": "#05090D",
+  "theme_color": "#05090D",
+  "icons": [
+    { "src": "/assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
